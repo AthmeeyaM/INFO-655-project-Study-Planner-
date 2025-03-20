@@ -8,8 +8,10 @@ const TaskList = () => {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editedTask, setEditedTask] = useState("");
   const [editedDueDate, setEditedDueDate] = useState("");
+  const [editedDueTime, setEditedDueTime] = useState("");
   const [newTasks, setNewTasks] = useState({});
   const [newDueDates, setNewDueDates] = useState({});
+  const [newDueTimes, setNewDueTimes] = useState({});
 
   useEffect(() => {
     const savedSections = JSON.parse(localStorage.getItem("sections")) || ["General"];
@@ -19,24 +21,27 @@ const TaskList = () => {
 
     const initialTaskState = savedSections.reduce((acc, sec) => ({ ...acc, [sec]: "" }), {});
     const initialDateState = savedSections.reduce((acc, sec) => ({ ...acc, [sec]: "" }), {});
+    const initialTimeState = savedSections.reduce((acc, sec) => ({ ...acc, [sec]: "" }), {});
     setNewTasks(initialTaskState);
     setNewDueDates(initialDateState);
+    setNewDueTimes(initialTimeState);
   }, []);
 
   const saveDataToStorage = (updatedTasks, updatedSections) => {
-    setTasks(updatedTasks);
-    setSections(updatedSections);
     localStorage.setItem("tasks", JSON.stringify(updatedTasks));
     localStorage.setItem("sections", JSON.stringify(updatedSections));
+    setTasks(updatedTasks);
+    setSections(updatedSections);
   };
 
   const addSection = () => {
     const sectionName = prompt("Enter new section name:");
     if (sectionName && !sections.includes(sectionName)) {
-      const updatedSections = [sectionName, ...sections]; 
+      const updatedSections = [sectionName, ...sections];
       saveDataToStorage({ ...tasks, [sectionName]: [] }, updatedSections);
       setNewTasks({ ...newTasks, [sectionName]: "" });
       setNewDueDates({ ...newDueDates, [sectionName]: "" });
+      setNewDueTimes({ ...newDueTimes, [sectionName]: "" });
     }
   };
 
@@ -76,23 +81,26 @@ const TaskList = () => {
     const newTaskObj = {
       id: Date.now().toString(),
       title: newTasks[section],
-      dueDate: newDueDates[section] ? newDueDates[section] : null, 
+      dueDate: newDueDates[section] ? newDueDates[section] : null,
+      dueTime: newDueTimes[section] ? newDueTimes[section] : null,
       completed: false,
     };
     saveDataToStorage({ ...tasks, [section]: [...(tasks[section] || []), newTaskObj] }, sections);
     setNewTasks({ ...newTasks, [section]: "" });
     setNewDueDates({ ...newDueDates, [section]: "" });
+    setNewDueTimes({ ...newDueTimes, [section]: "" });
   };
-  
+
   const handleEdit = (task) => {
     setEditingTaskId(task.id);
     setEditedTask(task.title);
-    setEditedDueDate(task.dueDate ? formatDateForInput(task.dueDate) : "");
+    setEditedDueDate(task.dueDate ? formatDate(task.dueDate) : "");
+    setEditedDueTime(task.dueTime || "");
   };
 
   const saveEdit = (section) => {
     const updatedTasks = tasks[section].map((task) =>
-      task.id === editingTaskId ? { ...task, title: editedTask, dueDate: editedDueDate ? formatDate(editedDueDate) : null } : task
+      task.id === editingTaskId ? { ...task, title: editedTask, dueDate: editedDueDate ? formatDate(editedDueDate) : null, dueTime: editedDueTime || null } : task
     );
     saveDataToStorage({ ...tasks, [section]: updatedTasks }, sections);
     setEditingTaskId(null);
@@ -103,26 +111,14 @@ const TaskList = () => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return ""; 
+    if (!dateString) return "";
     const parts = dateString.split("-");
     if (parts.length === 3) {
-      const [year, month, day] = parts; 
-      return `${month.padStart(2, "0")}/${day.padStart(2, "0")}/${year}`; 
+      const [year, month, day] = parts;
+      return `${month.padStart(2, "0")}/${day.padStart(2, "0")}/${year}`;
     }
-    return dateString; 
+    return dateString;
   };
-  
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return ""; 
-    const parts = dateString.split("/");
-    if (parts.length === 3) {
-      const [month, day, year] = parts; 
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; 
-    }
-    return dateString; 
-  };
-  
-  
 
   const sortTasks = (taskList) => {
     return [...taskList].sort((a, b) => {
@@ -161,15 +157,28 @@ const TaskList = () => {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "10px" }}>
             <input type="text" placeholder="Task name" value={newTasks[section]} onChange={(e) => setNewTasks({ ...newTasks, [section]: e.target.value })} />
             <input type="date" value={newDueDates[section]} onChange={(e) => setNewDueDates({ ...newDueDates, [section]: e.target.value })} />
+            <input type="time" value={newDueTimes[section]} onChange={(e) => setNewDueTimes({ ...newDueTimes, [section]: e.target.value })} />
             <button onClick={() => addTask(section)} style={{ padding: "5px", backgroundColor: "#28a745", color: "white", borderRadius: "5px", cursor: "pointer" }}>+</button>
           </div>
 
           <ul>
             {sortTasks(tasks[section] || []).map((task) => (
               <li key={task.id} style={{ display: "flex", justifyContent: "space-between", padding: "5px", borderBottom: "1px solid #ddd" }}>
-                {task.title} {task.dueDate && ` (Due: ${formatDate(task.dueDate)})`}
-                <button onClick={() => handleEdit(task)}>✏</button>
-                <button onClick={() => deleteTask(section, task.id)}>🗑</button>
+                {editingTaskId === task.id ? (
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <input type="text" value={editedTask} onChange={(e) => setEditedTask(e.target.value)} />
+                    <input type="date" value={editedDueDate} onChange={(e) => setEditedDueDate(e.target.value)} />
+                    <input type="time" value={editedDueTime} onChange={(e) => setEditedDueTime(e.target.value)} />
+                    <button onClick={() => saveEdit(section)} style={{ padding: "5px", backgroundColor: "#0078D4", color: "white", borderRadius: "5px" }}>Save</button>
+                  </div>
+                ) : (
+                  <>
+                    {task.title} 
+                    {task.dueDate && ` (Due: ${formatDate(task.dueDate)}${task.dueTime ? ` ${task.dueTime}` : ""})`}
+                    <button onClick={() => handleEdit(task)} style={{ backgroundColor: "blue", color: "white", borderRadius: "5px", padding: "5px", cursor: "pointer" }}>✏</button>
+                    <button onClick={() => deleteTask(section, task.id)} style={{ backgroundColor: "red", color: "white", borderRadius: "5px", padding: "5px", cursor: "pointer" }}>🗑</button>
+                  </>
+                )}
               </li>
             ))}
           </ul>

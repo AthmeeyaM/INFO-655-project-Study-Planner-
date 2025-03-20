@@ -27,25 +27,28 @@ const Dashboard = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
+  
     const date = new Date(dateString);
-    if (isNaN(date)) return "";
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");  
-    const day = String(date.getUTCDate()).padStart(2, "0");         
-    const year = date.getUTCFullYear();                             
+    if (isNaN(date.getTime())) return "";
+  
+    const year = date.getUTCFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
   
     return `${month}/${day}/${year}`;
   };
-
+  
   const addTask = () => {
     if (!newTask.trim()) {
       alert("Please enter a task.");
       return;
     }
+    const dueDateUtc = dueDate ? new Date(dueDate).toISOString() : null;
 
     const newTaskObj = {
       id: Date.now(),
       title: newTask,
-      dueDate: dueDate || null,
+      dueDate: dueDateUtc,
       completed: false,
       section: "General",
     };
@@ -64,7 +67,7 @@ const Dashboard = () => {
 
   const saveEdit = () => {
     const updatedTasks = tasks.map((task) =>
-      task.id === editTaskId ? { ...task, title: editedTask, dueDate: editedDueDate || null } : task
+      task.id === editTaskId ? { ...task, title: editedTask, dueDate: editedDueDate || task.dueDate } : task
     );
     updateTasksInStorage(updatedTasks);
     setEditTaskId(null);
@@ -104,7 +107,7 @@ const Dashboard = () => {
           style={{ ...styles.input, backgroundColor: darkMode ? "#333" : "#fff", color: darkMode ? "#fff" : "#000" }}
         />
         <input
-          type="date"
+          type="datetime-local"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           style={styles.dateInput}
@@ -126,7 +129,7 @@ const Dashboard = () => {
                     style={{ ...styles.input, backgroundColor: darkMode ? "#444" : "#fff", color: darkMode ? "#fff" : "#000" }}
                   />
                   <input
-                    type="date"
+                    type="datetime-local"
                     value={editedDueDate}
                     onChange={(e) => setEditedDueDate(e.target.value)}
                     style={styles.dateInput}
