@@ -33,7 +33,7 @@ const TaskList = () => {
   const addSection = () => {
     const sectionName = prompt("Enter new section name:");
     if (sectionName && !sections.includes(sectionName)) {
-      const updatedSections = [sectionName, ...sections]; // New sections appear at the top
+      const updatedSections = [sectionName, ...sections]; 
       saveDataToStorage({ ...tasks, [sectionName]: [] }, updatedSections);
       setNewTasks({ ...newTasks, [sectionName]: "" });
       setNewDueDates({ ...newDueDates, [sectionName]: "" });
@@ -76,14 +76,14 @@ const TaskList = () => {
     const newTaskObj = {
       id: Date.now().toString(),
       title: newTasks[section],
-      dueDate: newDueDates[section] ? formatDate(newDueDates[section]) : null,
+      dueDate: newDueDates[section] ? newDueDates[section] : null, 
       completed: false,
     };
     saveDataToStorage({ ...tasks, [section]: [...(tasks[section] || []), newTaskObj] }, sections);
     setNewTasks({ ...newTasks, [section]: "" });
     setNewDueDates({ ...newDueDates, [section]: "" });
   };
-
+  
   const handleEdit = (task) => {
     setEditingTaskId(task.id);
     setEditedTask(task.title);
@@ -103,23 +103,23 @@ const TaskList = () => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return ""; // Handle empty date
+    if (!dateString) return ""; 
     const parts = dateString.split("-");
     if (parts.length === 3) {
-      const [year, month, day] = parts; // Extract YYYY-MM-DD
-      return `${month.padStart(2, "0")}/${day.padStart(2, "0")}/${year}`; // Convert to MM/DD/YYYY
+      const [year, month, day] = parts; 
+      return `${month.padStart(2, "0")}/${day.padStart(2, "0")}/${year}`; 
     }
-    return dateString; // Return unchanged if already formatted correctly
+    return dateString; 
   };
   
   const formatDateForInput = (dateString) => {
-    if (!dateString) return ""; // Handle empty date
+    if (!dateString) return ""; 
     const parts = dateString.split("/");
     if (parts.length === 3) {
-      const [month, day, year] = parts; // Extract MM/DD/YYYY
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; // Convert to YYYY-MM-DD
+      const [month, day, year] = parts; 
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; 
     }
-    return dateString; // Return unchanged if already formatted correctly
+    return dateString; 
   };
   
   
@@ -167,7 +167,7 @@ const TaskList = () => {
           <ul>
             {sortTasks(tasks[section] || []).map((task) => (
               <li key={task.id} style={{ display: "flex", justifyContent: "space-between", padding: "5px", borderBottom: "1px solid #ddd" }}>
-                {task.title} {task.dueDate && ` (Due: ${task.dueDate})`}
+                {task.title} {task.dueDate && ` (Due: ${formatDate(task.dueDate)})`}
                 <button onClick={() => handleEdit(task)}>✏</button>
                 <button onClick={() => deleteTask(section, task.id)}>🗑</button>
               </li>

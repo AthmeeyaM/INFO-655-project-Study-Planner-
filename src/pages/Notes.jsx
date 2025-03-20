@@ -6,6 +6,14 @@ const NotesSection = () => {
   const [editNoteId, setEditNoteId] = useState(null);
   const [showInputFields, setShowInputFields] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const savedMode = JSON.parse(localStorage.getItem("darkMode"));
+    if (savedMode !== null) {
+      setDarkMode(savedMode);
+    }
+  }, []);
 
   useEffect(() => {
     const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
@@ -60,7 +68,13 @@ const NotesSection = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div
+      style={{
+        ...styles.container,
+        backgroundColor: darkMode ? "#1e1e1e" : "#f5f5f5",
+        color: darkMode ? "#ffffff" : "#333",
+      }}
+    >
       <h1 style={styles.heading}>Notes and Resources</h1>
 
       {!showInputFields ? (
@@ -98,7 +112,11 @@ const NotesSection = () => {
 
       <div style={styles.notesGrid}>
         {notes.map((note) => (
-          <div key={note.id} style={styles.note}>
+          <div key={note.id} style={{ 
+            ...styles.note, 
+            backgroundColor: darkMode ? "#333" : "#f9f9f9", 
+            color: darkMode ? "#ffffff" : "#000" 
+          }}>
             <h3 style={styles.noteTitle}>{note.title}</h3>
             <p style={styles.noteDescription}>
               {note.description.length > 100
@@ -134,7 +152,11 @@ const NotesSection = () => {
 
       {selectedNote && (
         <div style={styles.dialogOverlay}>
-          <div style={styles.dialog}>
+          <div style={{ 
+            ...styles.dialog, 
+            backgroundColor: darkMode ? "#222" : "#fff", 
+            color: darkMode ? "#ffffff" : "#000" 
+          }}>
             <h3 style={styles.dialogTitle}>{selectedNote.title}</h3>
             <div style={styles.dialogContent}>{selectedNote.description}</div>
             <div style={styles.dialogButtonContainer}>
@@ -170,10 +192,11 @@ const styles = {
     margin: "0 auto",
     padding: "20px",
     fontFamily: "Arial, sans-serif",
+    transition: "background-color 0.3s ease, color 0.3s ease",
   },
   heading: {
     textAlign: "center",
-    color: "#333",
+    transition: "color 0.3s ease",
   },
   addNoteButton: {
     display: "block",
@@ -186,37 +209,6 @@ const styles = {
     borderRadius: "4px",
     cursor: "pointer",
   },
-  inputContainer: {
-    marginBottom: "20px",
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    fontSize: "16px",
-    border: "1px solid #ccc",
-    borderRadius: "4px",
-    marginBottom: "10px",
-  },
-  textarea: {
-    width: "100%",
-    padding: "10px",
-    fontSize: "16px",
-    border: "1px solid #ccc",
-    borderRadius: "4px",
-    marginBottom: "10px",
-    minHeight: "100px",
-    resize: "vertical",
-  },
-  addButton: {
-    padding: "10px 20px",
-    fontSize: "16px",
-    backgroundColor: "#28a745",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    width: "100%",
-  },
   notesGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
@@ -227,105 +219,8 @@ const styles = {
     border: "1px solid #ccc",
     borderRadius: "4px",
     padding: "20px",
-    backgroundColor: "#f9f9f9",
     cursor: "pointer",
-    transition: "transform 0.2s, box-shadow 0.2s",
-  },
-  noteTitle: {
-    margin: "0 0 10px 0",
-    fontSize: "18px",
-    fontWeight: "bold",
-  },
-  noteDescription: {
-    margin: "0",
-    fontSize: "14px",
-    color: "#555",
-    minHeight: "100px",
-  },
-  buttonContainer: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "10px",
-  },
-  editButton: {
-    padding: "5px 10px",
-    fontSize: "14px",
-    backgroundColor: "#ffc107",
-    color: "#000",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    flex: 1,
-  },
-  deleteButton: {
-    padding: "5px 10px",
-    fontSize: "14px",
-    backgroundColor: "#dc3545",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    flex: 1,
-  },
-  viewButton: {
-    padding: "5px 10px",
-    fontSize: "14px",
-    backgroundColor: "#0078D4",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    flex: 1,
-  },
-  dialogOverlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dialog: {
-    backgroundColor: "#fff",
-    padding: "20px",
-    borderRadius: "8px",
-    width: "400px",
-    maxWidth: "90%",
-  },
-  dialogTitle: {
-    margin: "0 0 10px 0",
-    fontSize: "20px",
-    fontWeight: "bold",
-  },
-  dialogDescription: {
-    margin: "0",
-    fontSize: "16px",
-    color: "#555",
-  },
-  dialogButtonContainer: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "20px",
-  },
-  closeButton: {
-    padding: "5px 10px",
-    fontSize: "14px",
-    backgroundColor: "#6c757d",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    flex: 1,
-  },
-  dialogContent: {
-    maxHeight: "300px",
-    overflowY: "auto",
-    padding: "10px",
-    border: "1px solid #ddd",
-    backgroundColor: "#f9f9f9",
+    transition: "background-color 0.3s ease, color 0.3s ease",
   },
 };
 

@@ -1,31 +1,30 @@
-import { useState, useEffect } from "react";
+import { useContext } from "react";
+import { DarkModeContext } from "../context/DarkModeContext";
 
-const Settings = () => {
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    const savedMode = JSON.parse(localStorage.getItem("darkMode"));
-    if (savedMode) {
-      setDarkMode(savedMode);
-      document.body.style.backgroundColor = savedMode ? "#333" : "#fff";
-      document.body.style.color = savedMode ? "#fff" : "#000";
-    }
-  }, []);
+const Settings = ({ notificationsEnabled, toggleNotifications }) => {
+  const { darkMode, setDarkMode } = useContext(DarkModeContext);
 
   const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem("darkMode", JSON.stringify(newMode));
-    document.body.style.backgroundColor = newMode ? "#333" : "#fff";
-    document.body.style.color = newMode ? "#fff" : "#000";
+    setDarkMode((prevMode) => !prevMode);
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>Settings</h2>
-      <button onClick={toggleDarkMode} style={styles.button}>
-        {darkMode ? "Disable Dark Mode" : "Enable Dark Mode"}
-      </button>
+    <div style={{ ...styles.container, backgroundColor: darkMode ? "#1e1e1e" : "#f5f5f5" }}>
+      <h2 style={{ ...styles.title, color: darkMode ? "#fff" : "#333" }}>Settings</h2>
+
+      <div style={styles.toggleSection}>
+        {/* Dark Mode Toggle */}
+        <button onClick={toggleDarkMode} style={styles.button}>
+          {darkMode ? "Disable Dark Mode" : "Enable Dark Mode"}
+        </button>
+      </div>
+
+      <div style={styles.toggleSection}>
+        {/* Notifications Toggle */}
+        <button onClick={toggleNotifications} style={styles.button}>
+          {notificationsEnabled ? "Disable Notifications" : "Enable Notifications"}
+        </button>
+      </div>
     </div>
   );
 };
@@ -33,23 +32,35 @@ const Settings = () => {
 const styles = {
   container: {
     textAlign: "center",
-    margin: "20px auto",
-    padding: "20px",
-    backgroundColor: "#f9f9f9",
-    borderRadius: "10px",
-    width: "60%",
+    margin: "30px auto",
+    padding: "30px",
+    borderRadius: "15px",
+    width: "70%",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    transition: "background-color 0.3s ease, box-shadow 0.3s ease",
   },
   title: {
-    fontSize: "24px",
-    color: "#333",
+    fontSize: "28px",
+    fontWeight: "bold",
+    marginBottom: "20px",
+    transition: "color 0.3s ease",
+  },
+  toggleSection: {
+    marginBottom: "20px",
   },
   button: {
-    padding: "10px",
+    padding: "12px 24px",
+    margin: "10px",
     backgroundColor: "#007bff",
-    color: "white",
+    color: "#fff",
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",
+    display: "inline-block",
+    width: "100%",
+    maxWidth: "280px",
+    fontSize: "16px",
+    transition: "background-color 0.3s ease, transform 0.3s ease",
   },
 };
 
