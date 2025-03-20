@@ -1,14 +1,19 @@
 import { useState, useEffect, useContext } from "react";
 import { DarkModeContext } from "../context/DarkModeContext";
+import { NotificationContext } from "../context/NotificationContext";
 
 const Dashboard = () => {
   const { darkMode } = useContext(DarkModeContext);
+  const { scheduleNotification } = useContext(NotificationContext);
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [newDueDate, setNewDueDate] = useState(""); // Separate date
+  const [newDueTime, setNewDueTime] = useState(""); // Separate time
   const [editTaskId, setEditTaskId] = useState(null);
   const [editedTask, setEditedTask] = useState("");
   const [editedDueDate, setEditedDueDate] = useState("");
+  const [editedDueTime, setEditedDueTime] = useState("");
+  const [notificationTime, setNotificationTime] = useState("");
 
   useEffect(() => {
     loadTasks();
@@ -23,53 +28,78 @@ const Dashboard = () => {
       return new Date(a.dueDate || Infinity) - new Date(b.dueDate || Infinity);
     });
     setTasks(allTasks);
+    allTasks.forEach((task) => scheduleNotification(task));
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-  
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
-  
-    const year = date.getUTCFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-  
-    return `${month}/${day}/${year}`;
+  const formatDateTime = (dueDate, dueTime) => {
+    if (!dueDate) return "";
+    const date = new Date(dueDate);
+    const dateStr = `${(date.getMonth() + 1).toString().padStart(2, "0")}/${date
+      .getDate()
+      .toString()
+      .padStart(2, "0")}/${date.getFullYear()}`;
+    return dueTime ? `${dateStr} ${dueTime}` : dateStr;
   };
-  
+
   const addTask = () => {
     if (!newTask.trim()) {
       alert("Please enter a task.");
       return;
     }
-    const dueDateUtc = dueDate ? new Date(dueDate).toISOString() : null;
+    const dueDateTime = newDueDate && newDueTime
+      ? new Date(`${newDueDate}T${newDueTime}:00`).toISOString()
+      : newDueDate
+      ? new Date(`${newDueDate}T00:00:00`).toISOString()
+      : null;
 
     const newTaskObj = {
       id: Date.now(),
       title: newTask,
-      dueDate: dueDateUtc,
+      dueDate: dueDateTime,
+      dueTime: newDueTime || null,
+      notificationTime: notificationTime ? parseInt(notificationTime) : null,
       completed: false,
       section: "General",
     };
 
     const updatedTasks = [...tasks, newTaskObj];
     updateTasksInStorage(updatedTasks);
+    scheduleNotification(newTaskObj);
     setNewTask("");
-    setDueDate("");
+    setNewDueDate("");
+    setNewDueTime("");
+    setNotificationTime("");
   };
 
   const handleEdit = (task) => {
     setEditTaskId(task.id);
     setEditedTask(task.title);
-    setEditedDueDate(task.dueDate || "");
+    setEditedDueDate(task.dueDate ? task.dueDate.slice(0, 10) : "");
+    setEditedDueTime(task.dueTime || "");
+    setNotificationTime(task.notificationTime || "");
   };
 
   const saveEdit = () => {
+    const dueDateTime = editedDueDate && editedDueTime
+      ? new Date(`${editedDueDate}T${editedDueTime}:00`).toISOString()
+      : editedDueDate
+      ? new Date(`${editedDueDate}T00:00:00`).toISOString()
+      : null;
+
     const updatedTasks = tasks.map((task) =>
-      task.id === editTaskId ? { ...task, title: editedTask, dueDate: editedDueDate || task.dueDate } : task
+      task.id === editTaskId
+        ? {
+            ...task,
+            title: editedTask,
+            dueDate: dueDateTime,
+            dueTime: editedDueTime || null,
+            notificationTime: notificationTime ? parseInt(notificationTime) : task.notificationTime,
+          }
+        : task
     );
     updateTasksInStorage(updatedTasks);
+    const editedTaskObj = updatedTasks.find((t) => t.id === editTaskId);
+    scheduleNotification(editedTaskObj);
     setEditTaskId(null);
   };
 
@@ -107,9 +137,24 @@ const Dashboard = () => {
           style={{ ...styles.input, backgroundColor: darkMode ? "#333" : "#fff", color: darkMode ? "#fff" : "#000" }}
         />
         <input
-          type="datetime-local"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
+          type="date"
+          value={newDueDate}
+          onChange={(e) => setNewDueDate(e.target.value)}
+          style={styles.dateInput}
+        />
+        <input
+          type="time"
+          value={newDueTime}
+          onChange={(e) => setNewDueTime(e.target.value)}
+          style={styles.dateInput}
+        />
+        <input
+          type="number"
+          placeholder="Notify (hours before)"
+          value={notificationTime}
+          onChange={(e) => setNotificationTime(e.target.value)}
+          min="0"
+          step="0.1"
           style={styles.dateInput}
         />
         <button onClick={addTask} style={styles.addButton}>Add Task</button>
@@ -129,9 +174,24 @@ const Dashboard = () => {
                     style={{ ...styles.input, backgroundColor: darkMode ? "#444" : "#fff", color: darkMode ? "#fff" : "#000" }}
                   />
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={editedDueDate}
                     onChange={(e) => setEditedDueDate(e.target.value)}
+                    style={styles.dateInput}
+                  />
+                  <input
+                    type="time"
+                    value={editedDueTime}
+                    onChange={(e) => setEditedDueTime(e.target.value)}
+                    style={styles.dateInput}
+                  />
+                  <input
+                    type="number"
+                    value={notificationTime}
+                    onChange={(e) => setNotificationTime(e.target.value)}
+                    min="0"
+                    step="0.1"
+                    placeholder="Notify (hours before)"
                     style={styles.dateInput}
                   />
                   <button onClick={saveEdit} style={styles.saveButton}>Save</button>
@@ -145,7 +205,12 @@ const Dashboard = () => {
                   />
                   <span style={styles.taskText}>
                     {task.title}
-                    {task.dueDate && <span style={styles.dueDate}> (Due: {formatDate(task.dueDate)})</span>}
+                    {task.dueDate && (
+                      <span style={styles.dueDate}> (Due: {formatDateTime(task.dueDate, task.dueTime)})</span>
+                    )}
+                    {task.notificationTime && (
+                      <span style={styles.dueDate}> (Notify: {task.notificationTime} hrs before)</span>
+                    )}
                   </span>
                   <button onClick={() => handleEdit(task)} style={styles.editButton}>✏</button>
                   <button onClick={() => deleteTask(task.id)} style={styles.deleteButton}>🗑</button>
@@ -170,7 +235,12 @@ const Dashboard = () => {
               />
               <span>
                 {task.title}
-                {task.dueDate && <span style={styles.dueDate}> (Due: {formatDate(task.dueDate)})</span>}
+                {task.dueDate && (
+                  <span style={styles.dueDate}> (Due: {formatDateTime(task.dueDate, task.dueTime)})</span>
+                )}
+                {task.notificationTime && (
+                  <span style={styles.dueDate}> (Notify: {task.notificationTime} hrs before)</span>
+                )}
               </span>
               <button onClick={() => deleteTask(task.id)} style={styles.deleteButton}>🗑</button>
             </li>

@@ -3,17 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://github.com/AthmeeyaM/INFO-655-project-Study-Planner-",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "react": "^19.0.0",
+    "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-calendar": "^5.1.0",
-    "react-dom": "^19.0.0",
+    "react-dom": "^18.2.0",
     "react-quill": "^2.0.0",
     "react-router-dom": "^7.2.0",
     "react-toastify": "^11.0.5"
@@ -27,6 +30,7 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "gh-pages": "^6.3.0",
     "globals": "^15.15.0",
     "vite": "^6.2.0"
   }

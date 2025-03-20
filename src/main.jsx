@@ -4,11 +4,14 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 import { DarkModeProvider } from "./context/DarkModeContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <DarkModeProvider>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </DarkModeProvider>,
+    <NotificationProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </NotificationProvider>
+  </DarkModeProvider>
 );
