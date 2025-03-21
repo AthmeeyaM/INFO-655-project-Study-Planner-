@@ -1,35 +1,21 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { DarkModeContext } from "../context/DarkModeContext";
 import { NotificationContext } from "../context/NotificationContext";
+import useTasks from "../hooks/useTasks";
 
 const Dashboard = () => {
   const { darkMode } = useContext(DarkModeContext);
   const { scheduleNotification } = useContext(NotificationContext);
-  const [tasks, setTasks] = useState([]);
+  const { tasks, addTask, editTask, toggleTaskCompletion, deleteTask } = useTasks();
   const [newTask, setNewTask] = useState("");
-  const [newDueDate, setNewDueDate] = useState(""); 
-  const [newDueTime, setNewDueTime] = useState(""); 
+  const [newDueDate, setNewDueDate] = useState("");
+  const [newDueTime, setNewDueTime] = useState("");
+  const [notificationTime, setNotificationTime] = useState("");
   const [editTaskId, setEditTaskId] = useState(null);
   const [editedTask, setEditedTask] = useState("");
   const [editedDueDate, setEditedDueDate] = useState("");
   const [editedDueTime, setEditedDueTime] = useState("");
-  const [notificationTime, setNotificationTime] = useState("");
-
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  const loadTasks = () => {
-    const savedTasks = JSON.parse(localStorage.getItem("tasks")) || {};
-    const allTasks = Object.values(savedTasks).flat();
-    allTasks.sort((a, b) => {
-      if (a.dueDate && !b.dueDate) return -1;
-      if (!a.dueDate && b.dueDate) return 1;
-      return new Date(a.dueDate || Infinity) - new Date(b.dueDate || Infinity);
-    });
-    setTasks(allTasks);
-    allTasks.forEach((task) => scheduleNotification(task));
-  };
+  const [editedNotificationTime, setEditedNotificationTime] = useState("");
 
   const formatDateTime = (dueDate, dueTime) => {
     if (!dueDate) return "";
@@ -41,29 +27,12 @@ const Dashboard = () => {
     return dueTime ? `${dateStr} ${dueTime}` : dateStr;
   };
 
-  const addTask = () => {
+  const handleAddTask = () => {
     if (!newTask.trim()) {
       alert("Please enter a task.");
       return;
     }
-    const dueDateTime = newDueDate && newDueTime
-      ? new Date(`${newDueDate}T${newDueTime}:00`).toISOString()
-      : newDueDate
-      ? new Date(`${newDueDate}T00:00:00`).toISOString()
-      : null;
-
-    const newTaskObj = {
-      id: Date.now(),
-      title: newTask,
-      dueDate: dueDateTime,
-      dueTime: newDueTime || null,
-      notificationTime: notificationTime ? parseInt(notificationTime) : null,
-      completed: false,
-      section: "General",
-    };
-
-    const updatedTasks = [...tasks, newTaskObj];
-    updateTasksInStorage(updatedTasks);
+    const newTaskObj = addTask(newTask, newDueDate, newDueTime, notificationTime);
     scheduleNotification(newTaskObj);
     setNewTask("");
     setNewDueDate("");
@@ -76,53 +45,17 @@ const Dashboard = () => {
     setEditedTask(task.title);
     setEditedDueDate(task.dueDate ? task.dueDate.slice(0, 10) : "");
     setEditedDueTime(task.dueTime || "");
-    setNotificationTime(task.notificationTime || "");
+    setEditedNotificationTime(task.notificationTime || "");
   };
 
-  const saveEdit = () => {
-    const dueDateTime = editedDueDate && editedDueTime
-      ? new Date(`${editedDueDate}T${editedDueTime}:00`).toISOString()
-      : editedDueDate
-      ? new Date(`${editedDueDate}T00:00:00`).toISOString()
-      : null;
-
-    const updatedTasks = tasks.map((task) =>
-      task.id === editTaskId
-        ? {
-            ...task,
-            title: editedTask,
-            dueDate: dueDateTime,
-            dueTime: editedDueTime || null,
-            notificationTime: notificationTime ? parseInt(notificationTime) : task.notificationTime,
-          }
-        : task
-    );
-    updateTasksInStorage(updatedTasks);
-    const editedTaskObj = updatedTasks.find((t) => t.id === editTaskId);
+  const handleSaveEdit = () => {
+    const editedTaskObj = editTask(editTaskId, editedTask, editedDueDate, editedDueTime, editedNotificationTime);
     scheduleNotification(editedTaskObj);
     setEditTaskId(null);
-  };
-
-  const toggleCompletion = (taskId) => {
-    const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    );
-    updateTasksInStorage(updatedTasks);
-  };
-
-  const deleteTask = (taskId) => {
-    const updatedTasks = tasks.filter((task) => task.id !== taskId);
-    updateTasksInStorage(updatedTasks);
-  };
-
-  const updateTasksInStorage = (updatedTasks) => {
-    setTasks(updatedTasks);
-    const sectionedTasks = updatedTasks.reduce((acc, task) => {
-      if (!acc[task.section]) acc[task.section] = [];
-      acc[task.section].push(task);
-      return acc;
-    }, {});
-    localStorage.setItem("tasks", JSON.stringify(sectionedTasks));
+    setEditedTask("");
+    setEditedDueDate("");
+    setEditedDueTime("");
+    setEditedNotificationTime("");
   };
 
   return (
@@ -157,7 +90,7 @@ const Dashboard = () => {
           step="0.1"
           style={styles.dateInput}
         />
-        <button onClick={addTask} style={styles.addButton}>Add Task</button>
+        <button onClick={handleAddTask} style={styles.addButton}>Add Task</button>
       </div>
 
       <h3 style={styles.sectionTitle}>Pending Tasks</h3>
@@ -187,21 +120,21 @@ const Dashboard = () => {
                   />
                   <input
                     type="number"
-                    value={notificationTime}
-                    onChange={(e) => setNotificationTime(e.target.value)}
+                    value={editedNotificationTime}
+                    onChange={(e) => setEditedNotificationTime(e.target.value)}
                     min="0"
                     step="0.1"
                     placeholder="Notify (hours before)"
                     style={styles.dateInput}
                   />
-                  <button onClick={saveEdit} style={styles.saveButton}>Save</button>
+                  <button onClick={handleSaveEdit} style={styles.saveButton}>Save</button>
                 </>
               ) : (
                 <>
                   <input
                     type="checkbox"
                     checked={task.completed}
-                    onChange={() => toggleCompletion(task.id)}
+                    onChange={() => toggleTaskCompletion(task.id)}
                   />
                   <span style={styles.taskText}>
                     {task.title}
@@ -231,7 +164,7 @@ const Dashboard = () => {
               <input
                 type="checkbox"
                 checked={task.completed}
-                onChange={() => toggleCompletion(task.id)}
+                onChange={() => toggleTaskCompletion(task.id)}
               />
               <span>
                 {task.title}
