@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://github.com/AthmeeyaM/INFO-655-project-Study-Planner-",
+  "homepage": "https://AthmeeyaM.github.io/INFO-655-project-Study-Planner-/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
