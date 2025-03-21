@@ -7,8 +7,8 @@ const Dashboard = () => {
   const { scheduleNotification } = useContext(NotificationContext);
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
-  const [newDueDate, setNewDueDate] = useState(""); // Separate date
-  const [newDueTime, setNewDueTime] = useState(""); // Separate time
+  const [newDueDate, setNewDueDate] = useState(""); 
+  const [newDueTime, setNewDueTime] = useState(""); 
   const [editTaskId, setEditTaskId] = useState(null);
   const [editedTask, setEditedTask] = useState("");
   const [editedDueDate, setEditedDueDate] = useState("");
@@ -127,7 +127,7 @@ const Dashboard = () => {
 
   return (
     <div style={{ ...styles.container, backgroundColor: darkMode ? "#121212" : "#f9f9f9", color: darkMode ? "#ffffff" : "#000000" }}>
-      <h2 style={styles.title}>Dashboard - Task Overview</h2>
+      <h2 style={styles.title}>Dashboard</h2>
       <div style={styles.inputSection}>
         <input
           type="text"
